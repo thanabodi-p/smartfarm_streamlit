@@ -2,7 +2,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-from utils import load_data_from_api, calculate_vpd, get_vpd_status
+from utils import load_data_from_mongo, calculate_vpd, get_vpd_status
 from streamlit_autorefresh import st_autorefresh
 
 # --- Page Config ---
@@ -23,8 +23,8 @@ st.caption(f"อัปเดตล่าสุด: {datetime.now().strftime('%H:
 @st.cache_data(ttl=5)
 def load_monitoring_data():
     """โหลดข้อมูลล่าสุดสำหรับ monitoring"""
-    df_sf = load_data_from_api("telemetry_data_clean", "SmartFarm", time_delta_days=1)
-    df_rpi = load_data_from_api("raspberry_pi_telemetry_clean", "raspberry_pi_status", time_delta_days=1)
+    df_sf = load_data_from_mongo("telemetry_data_clean", "SmartFarm", time_delta_days=1)
+    df_rpi = load_data_from_mongo("raspberry_pi_telemetry_clean", "raspberry_pi_status", time_delta_days=1)
     return df_sf, df_rpi
 
 df_smartfarm, df_rpi = load_monitoring_data()
