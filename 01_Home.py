@@ -1,77 +1,8 @@
-# import streamlit as st
-# import time
-# from datetime import datetime
-# from utils import load_data_from_mongo, calculate_vpd, get_vpd_status
-
-# # --- 1. ตั้งค่าพื้นฐาน (ทำครั้งเดียว) ---
-# st.set_page_config(page_title="Smart Framing Dashboard", layout="wide")
-# st.title("🌱 SmartFarm Real-Time Dashboard")
-
-# # --- 2. สร้างฟังก์ชันสำหรับวาด Dashboard ---
-# def draw_dashboard(df_raw):
-#     """
-#     ฟังก์ชันนี้รับ DataFrame ดิบเข้ามา แล้ววาดส่วนแสดงผลทั้งหมด
-#     """
-#     if df_raw.empty:
-#         st.warning("ไม่พบข้อมูลในช่วง 24 ชั่วโมงที่ผ่านมา")
-#         return # ออกจากฟังก์ชันถ้าไม่มีข้อมูล
-
-#     # --- ส่วนที่ 1: กรองข้อมูลและแสดงผลสรุป ---
-#     st.subheader("ข้อมูลสรุปภาพรวม (Device: SmartFarm)")
-#     df_smartfarm = df_raw[df_raw['deviceName'] == 'SmartFarm'].copy()
-
-#     if df_smartfarm.empty:
-#         st.warning("ไม่พบข้อมูลจาก Device 'SmartFarm' ในช่วง 24 ชั่วโมงที่ผ่านมา")
-#         return # ออกจากฟังก์ชันถ้าไม่มีข้อมูลจาก Device นี้
-
-#     # ดึงข้อมูลแถวล่าสุดเพื่อแสดงผลสรุป
-#     latest_data = df_smartfarm.sort_values(by='timestamp_local_dt').iloc[-1]
-    
-#     # คำนวณ VPD ล่าสุด
-#     latest_vpd = calculate_vpd(latest_data['temperature'], latest_data['humidity'])
-#     vpd_status, vpd_color = get_vpd_status(latest_vpd)
-
-#     # แบ่งคอลัมน์เพื่อแสดงผลสรุป
-#     col1, col2, col3, col4 = st.columns(4)
-#     col1.metric("🌡️ อุณหภูมิ", f"{latest_data['temperature']:.2f} °C")
-#     col2.metric("💧 ความชื้นอากาศ", f"{latest_data['humidity']:.2f} %")
-#     col3.metric("💨 VPD", f"{latest_vpd:.2f} kPa", help="Vapor Pressure Deficit: ค่าความแตกต่างระหว่างความดันไออิ่มตัวกับความดันไอในอากาศจริง ยิ่งค่าสูง อากาศยิ่งแห้ง")
-#     col4.markdown(f"**สถานะ VPD:** <span style='color:{vpd_color};'>{vpd_status}</span>", unsafe_allow_html=True)
-
-#     # --- ส่วนที่ 2: กราฟ ---
-#     st.divider()
-#     st.subheader("กราฟแสดงผลข้อมูลตามช่วงเวลา")
-#     chart_data = df_smartfarm.rename(columns={'timestamp_local_dt': 'index'}).set_index('index')
-
-#     st.write("##### **กราฟอุณหภูมิและความชื้นอากาศ**")
-#     st.line_chart(chart_data[['temperature', 'humidity']])
-
-#     st.write("##### **กราฟความชื้นดิน (Soil Raw)**")
-#     soil_columns = ['soil_raw_1', 'soil_raw_2', 'soil_raw_3', 'soil_raw_4']
-#     st.line_chart(chart_data[soil_columns])
-
-#     st.success(f"ข้อมูลอัปเดตล่าสุดเมื่อ {datetime.now().strftime('%H:%M:%S')}")
-    
-
-# # --- 3. สร้าง Placeholder และลูป Real-time ---
-# placeholder = st.empty()
-
-# while True:
-#     # ดึงข้อมูลใหม่
-#     df_data = load_data_from_mongo("telemetry_data_clean", "SmartFarm")
-    
-#     # สั่งให้วาด Dashboard ใหม่ทั้งหมดลงใน Placeholder
-#     with placeholder.container():
-#         draw_dashboard(df_data)
-        
-#     # หน่วงเวลา 5 วินาที
-#     time.sleep(5)
-
 # pages/1_🌱_สถานะฟาร์ม.py
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-from utils import load_data_from_mongo, calculate_vpd, get_vpd_status
+from utils import load_data_from_api, calculate_vpd, get_vpd_status
 from streamlit_autorefresh import st_autorefresh
 
 # --- Page Config ---
@@ -92,8 +23,8 @@ st.caption(f"อัปเดตล่าสุด: {datetime.now().strftime('%H:
 @st.cache_data(ttl=5)
 def load_monitoring_data():
     """โหลดข้อมูลล่าสุดสำหรับ monitoring"""
-    df_sf = load_data_from_mongo("telemetry_data_clean", "SmartFarm", time_delta_days=1)
-    df_rpi = load_data_from_mongo("raspberry_pi_telemetry_clean", "raspberry_pi_status", time_delta_days=1)
+    df_sf = load_data_from_api("telemetry_data_clean", "SmartFarm", time_delta_days=1)
+    df_rpi = load_data_from_api("raspberry_pi_telemetry_clean", "raspberry_pi_status", time_delta_days=1)
     return df_sf, df_rpi
 
 df_smartfarm, df_rpi = load_monitoring_data()

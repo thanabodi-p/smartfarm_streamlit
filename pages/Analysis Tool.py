@@ -4,7 +4,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from utils import load_data_from_mongo, calculate_vpd, get_vpd_status
+from utils import load_data_from_api, calculate_vpd, get_vpd_status
 from streamlit_autorefresh import st_autorefresh
 from datetime import datetime, time, timedelta
 import numpy as np
@@ -146,9 +146,9 @@ with st.sidebar:
 @st.cache_data(ttl=60 if not st.session_state.is_paused else 3600)
 def load_full_data(source):
     if source == "SmartFarm":
-        return load_data_from_mongo("telemetry_data_clean", "SmartFarm", time_delta_days=7)
+        return load_data_from_api("telemetry_data_clean", "SmartFarm", time_delta_days=7)
     elif source == "Raspberry Pi":
-        return load_data_from_mongo("raspberry_pi_telemetry_clean", "raspberry_pi_status", time_delta_days=7)
+        return load_data_from_api("raspberry_pi_telemetry_clean", "raspberry_pi_status", time_delta_days=7)
     return pd.DataFrame()
 
 df_full = load_full_data(st.session_state.data_source)
